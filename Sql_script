@@ -1,8 +1,10 @@
 DECLARE @ViewName NVARCHAR(255) = N'dbo.ViewName';
 
+
 SELECT 
     (SELECT OBJECT_DEFINITION(OBJECT_ID(@ViewName)) + CHAR(13) + CHAR(10) + 'GO' + CHAR(13) + CHAR(10)) +
-    ISNULL(CAST((
+    ISNULL(
+        (
         SELECT 
             'CREATE ' + CASE WHEN i.is_unique = 1 THEN 'UNIQUE ' ELSE '' END + 
             i.type_desc + ' INDEX [' + i.name + '] ON [' + SCHEMA_NAME(v.schema_id) + '].[' + v.name + '] (' +
@@ -26,4 +28,5 @@ SELECT
         JOIN sys.views v ON i.object_id = v.object_id
         WHERE i.object_id = OBJECT_ID(@ViewName) AND i.index_id > 0
         FOR XML PATH(''), TYPE
-    ) AS NVARCHAR(MAX)), '') AS FullScript;
+        ).value('.', 'NVARCHAR(MAX)')
+    , '') AS FullScript;
